@@ -4,7 +4,9 @@ import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -17,6 +19,7 @@ import com.example.gyropong.ui.viewmodels.SessionViewModel
 import com.example.gyropong.ui.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 import com.example.gyropong.R
+import com.example.gyropong.hardware.sensors.gyroscope.GyroscopeManager
 import com.example.gyropong.ui.viewmodels.BluetoothViewModel
 
 @Composable
@@ -124,14 +127,19 @@ fun AppNavHost(
                 navArgument("opponent") { type = NavType.StringType }
             )
         ) { backStackEntry ->
+
+            // Esto ya está dentro de un Composable, así que LocalContext.current funciona
+            val context = LocalContext.current
+            val gyroManager = remember { GyroscopeManager(context) }
+
             val nickname = backStackEntry.arguments?.getString("nickname") ?: "Guest"
             val opponent = backStackEntry.arguments?.getString("opponent") ?: "???"
 
             GyroPongGameScreen(
-                bluetoothVM = bluetoothVM, // 👈 se pasa el mismo VM
+                bluetoothVM = bluetoothVM,
+                gyroscopeManager = gyroManager,
                 nickname = nickname,
                 initialOpponentNickname = opponent,
-                initialIsConnected = bluetoothVM.isConnected.collectAsState().value,
                 onExit = { navController.popBackStack() }
             )
         }
