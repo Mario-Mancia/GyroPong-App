@@ -8,6 +8,6 @@ sealed class Screen(val route: String) {
 
     // Pantallas internas
     object FindMatch: Screen("find_match")
-    object Game : Screen("game")
+    object GyroPongGame : Screen("game")
     object Profile : Screen("profile")
 }

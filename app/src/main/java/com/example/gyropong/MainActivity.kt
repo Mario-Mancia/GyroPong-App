@@ -130,7 +130,7 @@ fun GyroPongApp(
 
         // Detectamos rutas que empiezan con find_match
         val isInternalScreen = currentRoute.startsWith(Screen.FindMatch.route) ||
-                currentRoute.startsWith(Screen.Game.route) ||
+                currentRoute.startsWith(Screen.GyroPongGame.route) ||
                 currentRoute.startsWith(Screen.Profile.route)
 
         when {
