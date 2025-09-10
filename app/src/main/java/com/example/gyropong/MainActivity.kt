@@ -36,6 +36,7 @@ import com.example.gyropong.ui.viewmodels.SessionViewModel
 import com.example.gyropong.ui.viewmodels.SessionViewModelFactory
 import com.example.gyropong.ui.viewmodels.UserViewModel
 import com.example.gyropong.ui.viewmodels.UserViewModelFactory
+import com.example.gyropong.hardware.vibration.VibrationManager
 
 class MainActivity : ComponentActivity() {
 
@@ -123,6 +124,7 @@ fun GyroPongApp(
     var backPressedTime by remember { mutableStateOf(0L) }
     val context = LocalContext.current
 
+    val vibrationManager = remember { VibrationManager(context) }
     // Control global del botón físico / gesto de back
     BackHandler(enabled = true) {
         val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
@@ -140,6 +142,7 @@ fun GyroPongApp(
                 } else {
                     backPressedTime = currentTime
                     Toast.makeText(context, "Pulsa otra vez para salir", Toast.LENGTH_SHORT).show()
+                    vibrationManager.vibrateSoft()
                 }
             }
 
@@ -154,6 +157,7 @@ fun GyroPongApp(
                 } else {
                     backPressedTime = currentTime
                     Toast.makeText(context, "Pulsa otra vez para salir", Toast.LENGTH_SHORT).show()
+                    vibrationManager.vibrateSoft()
                 }
             }
 

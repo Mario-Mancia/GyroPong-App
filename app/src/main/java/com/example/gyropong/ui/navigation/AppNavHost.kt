@@ -19,6 +19,7 @@ import com.example.gyropong.ui.viewmodels.SessionViewModel
 import com.example.gyropong.ui.viewmodels.UserViewModel
 import kotlinx.coroutines.launch
 import com.example.gyropong.R
+import com.example.gyropong.hardware.sensors.accelerometer.AccelerometerManager
 import com.example.gyropong.hardware.sensors.gyroscope.GyroscopeManager
 import com.example.gyropong.ui.viewmodels.BluetoothViewModel
 
@@ -68,8 +69,9 @@ fun AppNavHost(
                 onLoginSuccess = {
                     scope.launch {
                         val user = userViewModel.currentUser.value
+                        val avatarRes = R.drawable.avatar_frog
                         if (user != null) {
-                            navController.navigate("${Screen.FindMatch.route}/${user.username}/🐱") {
+                            navController.navigate("${Screen.FindMatch.route}/${user.username}/$avatarRes") {
                                 popUpTo(0) { inclusive = true }
                                 launchSingleTop = true
                             }
@@ -100,20 +102,20 @@ fun AppNavHost(
 
         // --- FIND MATCH SCREEN ---
         composable(
-            route = "${Screen.FindMatch.route}/{nickname}/{avatar}",
+            route = "${Screen.FindMatch.route}/{nickname}/{avatarRes}",
             arguments = listOf(
                 navArgument("nickname") { type = NavType.StringType },
-                navArgument("avatar") { type = NavType.StringType }
+                navArgument("avatarRes") { type = NavType.IntType }
             )
         ) { backStackEntry ->
             val nickname = backStackEntry.arguments?.getString("nickname") ?: "Guest"
-            val avatar = backStackEntry.arguments?.getString("avatar") ?: "🐱"
+            val avatarRes = backStackEntry.arguments?.getInt("avatarRes") ?: R.drawable.avatar_frog
             val currentUser by userViewModel.currentUser.collectAsState()
 
             FindMatchScreen(
-                bluetoothVM = bluetoothVM, // 👈 se pasa el mismo VM
+                bluetoothVM = bluetoothVM,
                 nickname = nickname,
-                avatar = avatar,
+                avatar = avatarRes,
                 currentUser = currentUser,
                 navController = navController
             )
@@ -144,135 +146,44 @@ fun AppNavHost(
             )
         }
 
-        // --- PROFILE SCREEN ---
-        composable(Screen.Profile.route) {
-            ProfileScreen(
-                navController = navController,
-                sessionViewModel = sessionViewModel,
-                userViewModel = userViewModel
+        // --- GAME SCREEN ---
+        composable(
+            route = "${Screen.RpsGame.route}/{nickname}/{avatarRes}/{opponent}/{opponentAvatar}",
+            arguments = listOf(
+                navArgument("nickname") { type = NavType.StringType },
+                navArgument("avatarRes") { type = NavType.IntType },
+                navArgument("opponent") { type = NavType.StringType },
+                navArgument("opponentAvatar") { type = NavType.IntType }
             )
-        }
-    }
-}
+        ) { backStackEntry ->
+            val context = LocalContext.current
+            val accelerometerManager = remember { AccelerometerManager(context) }
 
-/*
-@Composable
-fun AppNavHost(
-    navController: NavHostController = rememberNavController(),
-    sessionViewModel: SessionViewModel,
-    userViewModel: UserViewModel
-) {
-    val scope = rememberCoroutineScope()
+            val nickname = backStackEntry.arguments?.getString("nickname") ?: "Guest"
+            val avatar = backStackEntry.arguments?.getInt("avatarRes") ?: R.drawable.avatar_frog
+            val opponent = backStackEntry.arguments?.getString("opponent") ?: "???"
+            val opponentAvatar = backStackEntry.arguments?.getInt("opponentAvatar") ?: R.drawable.avatar_lion
 
-    NavHost(
-        navController = navController,
-        startDestination = Screen.Splash.route
-    ) {
-        // --- SPLASH SCREEN ---
-        composable(Screen.Splash.route) {
-            SplashScreen(
-                navController = navController,
-                sessionViewModel = sessionViewModel,
+            RpsGameScreen(
+                bluetoothVM = bluetoothVM,
+                accelerometerManager = accelerometerManager,
                 userViewModel = userViewModel,
-                splashTime = 2000L
-            )
-        }
-
-        // --- HOME SCREEN ---
-        composable(Screen.Home.route) {
-            HomeScreen(
-                onQuickMatchClick = {
-                    navController.navigate(Screen.QuickMatchSetup.route)
-                },
-                onSessionClick = {
-                    navController.navigate(Screen.Session.route)
-                }
-            )
-        }
-
-        // --- SESSION SCREEN ---
-        composable(Screen.Session.route) {
-            SessionScreen(
-                userViewModel = userViewModel,
-                sessionViewModel = sessionViewModel,
-                onBack = { /* No volver desde aquí */ },
-                onLoginSuccess = {
-                    scope.launch {
-                        val user = userViewModel.currentUser.value
-                        if (user != null) {
-                            navController.navigate("${Screen.FindMatch.route}/${user.username}/🐱") {
-                                popUpTo(0) { inclusive = true }
-                                launchSingleTop = true
-                            }
-                        }
-                    }
-                }
-            )
-        }
-
-        // --- QUICK MATCH SETUP SCREEN ---
-        composable(Screen.QuickMatchSetup.route) {
-            QuickMatchSetupScreen(
-                avatars = listOf(
-                    R.drawable.avatar_bear,
-                    R.drawable.avatar_lion,
-                    R.drawable.avatar_frog,
-                    R.drawable.avatar_monkey
-                ),
-                onBack = { /* No volver desde aquí */ },
-                onContinue = { nickname, avatar ->
-                    navController.navigate("${Screen.FindMatch.route}/$nickname/$avatar") {
-                        popUpTo(0) { inclusive = true }
+                nickname = nickname,
+                avatar = avatar,
+                opponentNickname = opponent,
+                opponentAvatar = opponentAvatar,
+                onExit = {
+                    Log.d("RpsGameScreen", "Salir presionado, desconectando Bluetooth")
+                    bluetoothVM.disconnect()
+                    bluetoothVM.stopDiscovery()
+                    navController.navigate(Screen.Splash.route) {
+                        popUpTo(0) { inclusive = true } // limpia todo el backstack
                         launchSingleTop = true
                     }
                 }
             )
         }
 
-        // --- FIND MATCH SCREEN ---
-        composable(
-            route = "${Screen.FindMatch.route}/{nickname}/{avatar}",
-            arguments = listOf(
-                navArgument("nickname") { type = NavType.StringType },
-                navArgument("avatar") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val nickname = backStackEntry.arguments?.getString("nickname") ?: "Guest"
-            val avatar = backStackEntry.arguments?.getString("avatar") ?: "🐱"
-            val currentUser by userViewModel.currentUser.collectAsState()
-
-            FindMatchScreen(
-                nickname = nickname,
-                avatar = avatar,
-                currentUser = currentUser,
-                navController = navController
-            )
-        }
-
-        // --- GAME SCREEN ---
-        composable(
-            route = "${Screen.GyroPongGame.route}/{nickname}/{opponent}",
-            arguments = listOf(
-                navArgument("nickname") { type = NavType.StringType },
-                navArgument("opponent") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val nickname = backStackEntry.arguments?.getString("nickname") ?: "Guest"
-            val opponent = backStackEntry.arguments?.getString("opponent") ?: "???"
-            val bluetoothVM: BluetoothViewModel = viewModel()
-
-            // Obtenemos el estado inicial de conexión desde la VM
-            val initialIsConnected = bluetoothVM.isConnected.collectAsState().value
-
-            GyroPongGameScreen(
-                bluetoothVM = bluetoothVM,
-                nickname = nickname,
-                initialOpponentNickname = opponent,
-                initialIsConnected = initialIsConnected,
-                onExit = { navController.popBackStack() }
-            )
-        }
-
         // --- PROFILE SCREEN ---
         composable(Screen.Profile.route) {
             ProfileScreen(
@@ -283,4 +194,3 @@ fun AppNavHost(
         }
     }
 }
-*/

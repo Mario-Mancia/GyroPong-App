@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import com.example.gyropong.ui.components.Ball
 import kotlin.math.abs
+import com.example.gyropong.hardware.vibration.VibrationManager
 
 @Composable
 fun GyroPongGameScreen(

@@ -15,13 +15,14 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.example.gyropong.ui.components.AvatarSelector
 import com.example.gyropong.ui.components.GameButton
+import com.example.gyropong.hardware.vibration.VibrationManager
 
 @Composable
 fun QuickMatchSetupScreen(
     modifier: Modifier = Modifier,
     avatars: List<Int>,
     onBack: () -> Unit,
-    onContinue: (nickname: String, avatar: Int) -> Unit
+    onContinue: (nickname: String, avatarRes: Int) -> Unit
 ) {
     var nickname by remember { mutableStateOf(TextFieldValue("")) }
     var selectedAvatar by remember { mutableStateOf<Int?>(null) }
@@ -38,7 +39,6 @@ fun QuickMatchSetupScreen(
             .background(gradientBackground)
             .padding(16.dp)
     ) {
-        // Botón de retroceder
         IconButton(onClick = onBack) {
             Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Color.White)
         }
@@ -57,7 +57,6 @@ fun QuickMatchSetupScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // OutlinedTextField al estilo SessionScreen
             OutlinedTextField(
                 value = nickname,
                 onValueChange = { nickname = it },
@@ -70,22 +69,11 @@ fun QuickMatchSetupScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
-                    disabledTextColor = Color.White,
-                    errorTextColor = Color.Red,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    errorContainerColor = Color.Transparent,
                     cursorColor = Color.Yellow,
-                    errorCursorColor = Color.Red,
                     focusedBorderColor = Color(0xFFFFD700),
                     unfocusedBorderColor = Color(0x99FFFFFF),
-                    disabledBorderColor = Color.Transparent,
-                    errorBorderColor = Color.Red,
                     focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White,
-                    disabledLabelColor = Color.White,
-                    errorLabelColor = Color.Red
+                    unfocusedLabelColor = Color.White
                 )
             )
 
@@ -110,90 +98,3 @@ fun QuickMatchSetupScreen(
         }
     }
 }
-
-/*
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
-
-@Composable
-fun QuickMatchSetupScreen(
-    modifier: Modifier = Modifier,
-    avatars: List<String> = listOf("🐱","🐶","🐵","🦊","🦁","🐸"),
-    onBack: () -> Unit,
-    onContinue: (nickname: String, avatar: String) -> Unit
-) {
-    var nickname by remember { mutableStateOf(TextFieldValue("")) }
-    var selectedAvatar by remember { mutableStateOf(avatars.first()) }
-
-    Column(
-        modifier = modifier.fillMaxSize().padding(16.dp)
-    ) {
-        // Botón retroceder arriba
-        IconButton(onClick = onBack) {
-            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Volver")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            OutlinedTextField(
-                value = nickname,
-                onValueChange = { nickname = it },
-                label = { Text("Nickname") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text("Selecciona un avatar")
-            Spacer(modifier = Modifier.height(8.dp))
-
-            LazyRow {
-                items(avatars) { avatar ->
-                    Text(
-                        text = avatar,
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .size(64.dp)
-                            .clickable { selectedAvatar = avatar },
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = { onContinue(nickname.text, selectedAvatar) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Continuar")
-            }
-        }
-    }
-}
-
-
-@Composable
-@Preview(showSystemUi = true)
-fun QuickMatchSetupScreenPreview() {
-    QuickMatchSetupScreen(
-        onBack = {}, // para preview, no hace nada
-        onContinue = { nickname, avatar -> /* demo */ }
-    )
-}
-*/

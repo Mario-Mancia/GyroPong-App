@@ -10,4 +10,6 @@ sealed class Screen(val route: String) {
     object FindMatch: Screen("find_match")
     object GyroPongGame : Screen("game")
     object Profile : Screen("profile")
+
+    object RpsGame : Screen("game_rps")
 }

@@ -73,6 +73,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.core.app.ActivityCompat
+import com.example.gyropong.R
 import com.example.gyropong.ui.components.GameButton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
@@ -80,12 +81,29 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.time.withTimeoutOrNull
 import kotlinx.coroutines.withTimeoutOrNull
+import com.example.gyropong.hardware.vibration.VibrationManager
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.gyropong.ui.components.GameButton
+import com.example.gyropong.ui.components.GuestTopBar
+import com.example.gyropong.ui.components.SessionTopBar
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun FindMatchScreen(
-    bluetoothVM: BluetoothViewModel, // 👈 ahora se recibe desde afuera
+    bluetoothVM: BluetoothViewModel,
     nickname: String,
-    avatar: String,
+    avatar: Int,
     currentUser: User?,
     navController: NavHostController
 ) {
@@ -97,8 +115,18 @@ fun FindMatchScreen(
 
     var isHosting by remember { mutableStateOf(false) }
     var isSearching by remember { mutableStateOf(false) }
+    var isConnecting by remember { mutableStateOf(false) } // 👈 Nuevo estado
     val scope = rememberCoroutineScope()
-    val showCancel = isHosting || isSearching
+    val showCancel = isHosting || isSearching || isConnecting
+
+    val avatarsList = listOf(
+        R.drawable.avatar_frog,
+        R.drawable.avatar_lion,
+        R.drawable.avatar_bear,
+        R.drawable.avatar_monkey
+    )
+
+    var currentAvatar by remember { mutableStateOf(avatar) }
 
     Column(
         modifier = Modifier
@@ -108,17 +136,20 @@ fun FindMatchScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // --- TOPBAR ---
         if (currentUser != null) {
             SessionTopBar(
                 username = currentUser.username,
-                avatar = avatar,
+                avatar = currentAvatar,
                 points = currentUser.userPoints,
+                avatars = avatarsList,
+                onAvatarSelected = { selected -> currentAvatar = selected },
                 onProfileClick = { navController.navigate(Screen.Profile.route) }
             )
         } else {
             GuestTopBar(
                 nickname = nickname,
-                avatar = avatar,
+                avatarRes = avatar,
                 onLogoutClick = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(0) { inclusive = true }
@@ -129,7 +160,7 @@ fun FindMatchScreen(
         }
 
         Spacer(Modifier.height(24.dp))
-        Text("Ingresa nickname y avatar para ser encontrado", color = Color.White)
+        Text("Crea una sala o busca una existente, ambos deben tener la aplicación.", color = Color.White)
         Spacer(Modifier.height(16.dp))
 
         // --- BOTONES ---
@@ -140,7 +171,7 @@ fun FindMatchScreen(
                 bluetoothVM.startServer(currentUser?.username ?: nickname)
                 isHosting = true
             },
-            enabled = !isHosting && !isSearching
+            enabled = !isHosting && !isSearching && !isConnecting
         )
 
         Spacer(Modifier.height(12.dp))
@@ -151,11 +182,12 @@ fun FindMatchScreen(
                 bluetoothVM.startDiscovery()
                 isSearching = true
             },
-            enabled = !isHosting && !isSearching
+            enabled = !isHosting && !isSearching && !isConnecting
         )
 
         Spacer(Modifier.height(24.dp))
 
+        // --- BUSCANDO ---
         if (isSearching) {
             if (devices.isEmpty()) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -182,6 +214,7 @@ fun FindMatchScreen(
                                 Text(displayName, color = Color.White, fontSize = 16.sp)
                                 Text(device.address, color = Color.Gray, fontSize = 12.sp)
                             }
+
                             Box(
                                 modifier = Modifier
                                     .width(120.dp)
@@ -191,6 +224,7 @@ fun FindMatchScreen(
                                     .background(Color(0xFFFFD700), RoundedCornerShape(16.dp))
                                     .clickable {
                                         pressed = true
+                                        isConnecting = true // 👈 ahora entra en estado de carga
                                         scope.launch {
                                             bluetoothVM.connect(device, currentUser?.username ?: nickname)
                                             delay(100)
@@ -212,6 +246,17 @@ fun FindMatchScreen(
             }
         }
 
+        // --- CONECTANDO ---
+        if (isConnecting && !isConnected) {
+            Spacer(Modifier.height(24.dp))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator(color = Color.Cyan)
+                Spacer(Modifier.height(12.dp))
+                Text("Conectando...", color = Color.White)
+            }
+        }
+
+        // --- CANCELAR ---
         if (showCancel) {
             Spacer(Modifier.height(16.dp))
             Button(
@@ -220,6 +265,7 @@ fun FindMatchScreen(
                     bluetoothVM.stopDiscovery()
                     isHosting = false
                     isSearching = false
+                    isConnecting = false
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Red,
@@ -232,181 +278,16 @@ fun FindMatchScreen(
             ) { Text("CANCELAR", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold) }
         }
 
-        // --- Navegación a juego ---
+        // --- IR A JUEGO ---
         LaunchedEffect(isConnected, startSignalReceived, opponentNickname) {
             if (isConnected && startSignalReceived && opponentNickname != null) {
-                Log.d(
-                    "FindMatchScreen",
-                    "Navegando a GyroPongGameScreen -> Opponent: $opponentNickname"
-                )
-                navController.navigate("${Screen.GyroPongGame.route}/$nickname/$opponentNickname") {
+                navController.navigate(
+                    "${Screen.RpsGame.route}/$nickname/$avatar/${opponentNickname}/${R.drawable.avatar_lion}"
+                ) {
                     popUpTo(0) { inclusive = true }
                     launchSingleTop = true
                 }
-            } else {
-                Log.d(
-                    "FindMatchScreen",
-                    "Esperando señal de inicio... isConnected=$isConnected startSignal=$startSignalReceived opponent=$opponentNickname"
-                )
             }
         }
     }
 }
-
-
-/*
-@Composable
-fun FindMatchScreen(
-    bluetoothVM: BluetoothViewModel = viewModel(),
-    nickname: String,
-    avatar: String,
-    currentUser: User?,
-    navController: NavHostController
-) {
-    val devices by bluetoothVM.devices.collectAsState()
-    val isConnected by bluetoothVM.isConnected.collectAsState()
-    val startSignalReceived by bluetoothVM.startSignalReceived.collectAsState()
-    val nicknameMap by bluetoothVM.deviceNicknames.collectAsState()
-    val opponentNickname by bluetoothVM.opponentNickname.collectAsState()
-
-    var isHosting by remember { mutableStateOf(false) }
-    var isSearching by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    val showCancel = isHosting || isSearching
-
-    Column(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF6843A8)).padding(16.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (currentUser != null) {
-            SessionTopBar(
-                username = currentUser.username,
-                avatar = avatar,
-                points = currentUser.userPoints,
-                onProfileClick = { navController.navigate(Screen.Profile.route) }
-            )
-        } else {
-            GuestTopBar(
-                nickname = nickname,
-                avatar = avatar,
-                onLogoutClick = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(0) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
-
-        Spacer(Modifier.height(24.dp))
-        Text("Ingresa nickname y avatar para ser encontrado", color = Color.White)
-        Spacer(Modifier.height(16.dp))
-
-        // --- BOTONES ---
-        GameButton(
-            text = "Crear sala",
-            onClick = {
-                bluetoothVM.makeDiscoverable()
-                bluetoothVM.startServer(currentUser?.username ?: nickname)
-                isHosting = true
-            },
-            enabled = !isHosting && !isSearching
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        GameButton(
-            text = "Buscar partida",
-            onClick = {
-                bluetoothVM.startDiscovery()
-                isSearching = true
-            },
-            enabled = !isHosting && !isSearching
-        )
-
-        Spacer(Modifier.height(24.dp))
-
-        if (isSearching) {
-            if (devices.isEmpty()) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(color = Color.Yellow)
-                    Spacer(Modifier.height(12.dp))
-                    Text("Buscando jugadores...", color = Color.White)
-                }
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                    items(devices) { device ->
-                        @SuppressLint("MissingPermission")
-                        val displayName = nicknameMap[device.address] ?: device.name ?: "Sin nombre"
-                        var pressed by remember { mutableStateOf(false) }
-                        val scale by animateFloatAsState(if (pressed) 0.95f else 1f)
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(displayName, color = Color.White, fontSize = 16.sp)
-                                Text(device.address, color = Color.Gray, fontSize = 12.sp)
-                            }
-                            Box(
-                                modifier = Modifier.width(120.dp).height(48.dp)
-                                    .graphicsLayer { scaleX = scale; scaleY = scale }
-                                    .shadow(4.dp, RoundedCornerShape(16.dp))
-                                    .background(Color(0xFFFFD700), RoundedCornerShape(16.dp))
-                                    .clickable {
-                                        pressed = true
-                                        scope.launch {
-                                            bluetoothVM.connect(device, currentUser?.username ?: nickname)
-                                            delay(100)
-                                            pressed = false
-                                        }
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Conectar", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (showCancel) {
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = { bluetoothVM.disconnect(); bluetoothVM.stopDiscovery(); isHosting=false; isSearching=false },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red, contentColor = Color.Black),
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.fillMaxWidth().height(70.dp)
-            ) { Text("CANCELAR", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold) }
-        }
-
-        // --- Navegación a juego ---
-        LaunchedEffect(isConnected, startSignalReceived, opponentNickname) {
-            if (isConnected && startSignalReceived && opponentNickname != null) {
-                Log.d("FindMatchScreen", "Navegando a GyroPongGameScreen -> Opponent: $opponentNickname")
-                navController.navigate("${Screen.GyroPongGame.route}/$nickname/$opponentNickname") {
-                    popUpTo(0) { inclusive = true }
-                    launchSingleTop = true
-                }
-            } else {
-                Log.d("FindMatchScreen", "Esperando señal de inicio... isConnected=$isConnected startSignal=$startSignalReceived opponent=$opponentNickname")
-            }
-        }
-
-        /*
-        LaunchedEffect(isConnected, startSignalReceived, opponentNickname) {
-            if (isConnected && startSignalReceived && opponentNickname != null) {
-                navController.navigate("${Screen.GyroPongGame.route}/$nickname/$opponentNickname") {
-                    popUpTo(0) { inclusive = true }
-                    launchSingleTop = true
-                }
-            }
-        }*/
-    }
-}
-*/
