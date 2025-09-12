@@ -1,3 +1,4 @@
+// Archivo AppNavHost es el único encargado de la navegación general e inyección de clases.
 package com.example.gyropong.ui.navigation
 
 import android.util.Log
@@ -31,14 +32,13 @@ fun AppNavHost(
 ) {
     val scope = rememberCoroutineScope()
 
-    // 👇 BluetoothViewModel compartido por todo el flujo
     val bluetoothVM: BluetoothViewModel = viewModel()
 
     NavHost(
         navController = navController,
         startDestination = Screen.Splash.route
     ) {
-        // --- SPLASH SCREEN ---
+        // Pantalla de arranque (splash screen)
         composable(Screen.Splash.route) {
             SplashScreen(
                 navController = navController,
@@ -48,7 +48,7 @@ fun AppNavHost(
             )
         }
 
-        // --- HOME SCREEN ---
+        // Pantalla de inicio.
         composable(Screen.Home.route) {
             HomeScreen(
                 onQuickMatchClick = {
@@ -60,12 +60,12 @@ fun AppNavHost(
             )
         }
 
-        // --- SESSION SCREEN ---
+        // Pantalla de inicio de sesión o registro.
         composable(Screen.Session.route) {
             SessionScreen(
                 userViewModel = userViewModel,
                 sessionViewModel = sessionViewModel,
-                onBack = { /* No volver desde aquí */ },
+                onBack = {},
                 onLoginSuccess = {
                     scope.launch {
                         val user = userViewModel.currentUser.value
@@ -81,7 +81,7 @@ fun AppNavHost(
             )
         }
 
-        // --- QUICK MATCH SETUP SCREEN ---
+        // Pantalla para configurar un usuario rápido.
         composable(Screen.QuickMatchSetup.route) {
             QuickMatchSetupScreen(
                 avatars = listOf(
@@ -90,7 +90,7 @@ fun AppNavHost(
                     R.drawable.avatar_frog,
                     R.drawable.avatar_monkey
                 ),
-                onBack = { /* No volver desde aquí */ },
+                onBack = {},
                 onContinue = { nickname, avatar ->
                     navController.navigate("${Screen.FindMatch.route}/$nickname/$avatar") {
                         popUpTo(0) { inclusive = true }
@@ -100,7 +100,7 @@ fun AppNavHost(
             )
         }
 
-        // --- FIND MATCH SCREEN ---
+        // Pantalla de emparejamientos con otros usuarios bluetooth
         composable(
             route = "${Screen.FindMatch.route}/{nickname}/{avatarRes}",
             arguments = listOf(
@@ -121,7 +121,7 @@ fun AppNavHost(
             )
         }
 
-        // --- GAME SCREEN ---
+        // Pantalla del primer juego (no implementado en la ejecución)
         composable(
             route = "${Screen.GyroPongGame.route}/{nickname}/{opponent}",
             arguments = listOf(
@@ -130,7 +130,6 @@ fun AppNavHost(
             )
         ) { backStackEntry ->
 
-            // Esto ya está dentro de un Composable, así que LocalContext.current funciona
             val context = LocalContext.current
             val gyroManager = remember { GyroscopeManager(context) }
 
@@ -146,7 +145,7 @@ fun AppNavHost(
             )
         }
 
-        // --- GAME SCREEN ---
+        // Pantalla de juego.
         composable(
             route = "${Screen.RpsGame.route}/{nickname}/{avatarRes}/{opponent}/{opponentAvatar}",
             arguments = listOf(
@@ -184,7 +183,7 @@ fun AppNavHost(
             )
         }
 
-        // --- PROFILE SCREEN ---
+        // Pantalla de perfil de usuario.
         composable(Screen.Profile.route) {
             ProfileScreen(
                 navController = navController,

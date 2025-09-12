@@ -1,3 +1,4 @@
+// Consultas SQL para la tabla de users
 package com.example.gyropong.data.database.dao
 
 import androidx.room.*

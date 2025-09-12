@@ -1,3 +1,5 @@
+// Componente reutilizable para introducir una topbar si el usuario no ha iniciado sesión.
+
 package com.example.gyropong.ui.components
 
 import androidx.compose.foundation.Image
@@ -45,7 +47,7 @@ fun GuestTopBar(
             Image(
                 painter = painterResource(id = avatarRes),
                 contentDescription = "Avatar",
-                modifier = Modifier.size(56.dp) // un poco más grande
+                modifier = Modifier.size(56.dp)
             )
 
             // Nickname centrado

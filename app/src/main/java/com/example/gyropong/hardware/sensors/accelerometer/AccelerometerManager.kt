@@ -1,3 +1,4 @@
+// Clase para controlar el sensor de acelerómetro
 package com.example.gyropong.hardware.sensors.accelerometer
 
 import android.content.Context
@@ -17,7 +18,8 @@ class AccelerometerManager(context: Context) {
     private val _isFastMovement = MutableStateFlow(false)
     val isFastMovement: StateFlow<Boolean> = _isFastMovement
 
-    private val threshold = 15f // Valor para detectar movimiento brusco (ajustable)
+    // Este valor es ajustable dependiendo de qué tan intenso se requiera el movimiento,
+    private val threshold = 15f
 
     private val accelerometerListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent) {

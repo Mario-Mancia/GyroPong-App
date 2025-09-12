@@ -1,3 +1,4 @@
+// Este archivo contiene la estructura del viewmodel de usuarios, para utilizarlos en las screens.
 package com.example.gyropong.ui.viewmodels
 
 import android.util.Log
@@ -35,7 +36,7 @@ open class UserViewModel(private val userRepository: UserRepository) : ViewModel
         }
     }
 
-    // Login
+    // Iniciar sesión
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
@@ -53,7 +54,7 @@ open class UserViewModel(private val userRepository: UserRepository) : ViewModel
         }
     }
 
-    // Logout
+    // Cerrar sesión.
     fun logout() {
         Log.d(TAG, "Logout del usuario actual")
         _currentUser.value = null
@@ -84,6 +85,7 @@ open class UserViewModel(private val userRepository: UserRepository) : ViewModel
         }
     }
 
+    // Verificar si ya existe un usuario registrado con ese email
     fun isEmailRegistered(email: String, callback: (Boolean) -> Unit) {
         viewModelScope.launch {
             val user = userRepository.getUserByEmail(email)

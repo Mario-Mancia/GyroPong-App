@@ -1,16 +1,8 @@
+// Este archivo contiene la lógica y diseño de la pantalla más importante, la de emparejamiento.
 package com.example.gyropong.ui.screens
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.location.LocationManager
-import android.os.Build
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,70 +25,31 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import androidx.room.util.TableInfo
 import com.example.gyropong.domain.models.User
 import com.example.gyropong.ui.components.GuestTopBar
 import com.example.gyropong.ui.components.SessionTopBar
 import com.example.gyropong.ui.navigation.Screen
-import com.example.gyropong.hardware.bluetooth.BluetoothHelper
-import com.example.gyropong.hardware.bluetooth.BluetoothDiscovery
-import com.example.gyropong.hardware.bluetooth.BluetoothConnection
 import com.example.gyropong.ui.viewmodels.BluetoothViewModel
-import com.example.gyropong.ui.viewmodels.BluetoothViewModelFactory
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import android.provider.Settings
-import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.core.app.ActivityCompat
+import androidx.compose.ui.platform.LocalContext
 import com.example.gyropong.R
 import com.example.gyropong.ui.components.GameButton
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.time.withTimeoutOrNull
-import kotlinx.coroutines.withTimeoutOrNull
-import com.example.gyropong.hardware.vibration.VibrationManager
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.gyropong.ui.components.GameButton
-import com.example.gyropong.ui.components.GuestTopBar
-import com.example.gyropong.ui.components.SessionTopBar
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun FindMatchScreen(
@@ -112,6 +64,7 @@ fun FindMatchScreen(
     val startSignalReceived by bluetoothVM.startSignalReceived.collectAsState()
     val nicknameMap by bluetoothVM.deviceNicknames.collectAsState()
     val opponentNickname by bluetoothVM.opponentNickname.collectAsState()
+    val context = LocalContext.current
 
     var isHosting by remember { mutableStateOf(false) }
     var isSearching by remember { mutableStateOf(false) }
@@ -136,7 +89,9 @@ fun FindMatchScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // --- TOPBAR ---
+        /* Si el hay una sesióna activa se presenta su TopBar correspondiente, caso contrario se
+        * incrusta en la pantalla la barra de usuarios invitados.
+        * */
         if (currentUser != null) {
             SessionTopBar(
                 username = currentUser.username,
@@ -163,7 +118,7 @@ fun FindMatchScreen(
         Text("Crea una sala o busca una existente, ambos deben tener la aplicación.", color = Color.White)
         Spacer(Modifier.height(16.dp))
 
-        // --- BOTONES ---
+        // Botones
         GameButton(
             text = "Crear sala",
             onClick = {
@@ -187,7 +142,7 @@ fun FindMatchScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        // --- BUSCANDO ---
+        // Lista de dispositivos encontrados:
         if (isSearching) {
             if (devices.isEmpty()) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -196,7 +151,9 @@ fun FindMatchScreen(
                     Text("Buscando jugadores...", color = Color.White)
                 }
             } else {
-                LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                LazyColumn(modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)) {
                     items(devices) { device ->
                         @SuppressLint("MissingPermission")
                         val displayName = nicknameMap[device.address] ?: device.name ?: "Sin nombre"
@@ -224,9 +181,12 @@ fun FindMatchScreen(
                                     .background(Color(0xFFFFD700), RoundedCornerShape(16.dp))
                                     .clickable {
                                         pressed = true
-                                        isConnecting = true // 👈 ahora entra en estado de carga
+                                        isConnecting = true
                                         scope.launch {
-                                            bluetoothVM.connect(device, currentUser?.username ?: nickname)
+                                            bluetoothVM.connect(
+                                                device,
+                                                currentUser?.username ?: nickname
+                                            )
                                             delay(100)
                                             pressed = false
                                         }
@@ -246,17 +206,17 @@ fun FindMatchScreen(
             }
         }
 
-        // --- CONECTANDO ---
+        // Confirmación del intento de conexión:
         if (isConnecting && !isConnected) {
             Spacer(Modifier.height(24.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CircularProgressIndicator(color = Color.Cyan)
+                CircularProgressIndicator(color = Color.Yellow)
                 Spacer(Modifier.height(12.dp))
                 Text("Conectando...", color = Color.White)
             }
         }
 
-        // --- CANCELAR ---
+        // Cancelar
         if (showCancel) {
             Spacer(Modifier.height(16.dp))
             Button(
@@ -278,7 +238,7 @@ fun FindMatchScreen(
             ) { Text("CANCELAR", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold) }
         }
 
-        // --- IR A JUEGO ---
+        // Redireccionamiento hacia la pantalla del juego si están listos.
         LaunchedEffect(isConnected, startSignalReceived, opponentNickname) {
             if (isConnected && startSignalReceived && opponentNickname != null) {
                 navController.navigate(

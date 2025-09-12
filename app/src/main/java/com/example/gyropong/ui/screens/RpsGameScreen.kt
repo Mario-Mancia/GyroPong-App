@@ -1,10 +1,7 @@
+//Este archivo contiene la estructura y funcionalidades de la pantalla de juego.
+
 package com.example.gyropong.ui.screens
 
-import android.content.Context
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -33,7 +30,7 @@ import com.example.gyropong.ui.viewmodels.UserViewModel
 fun RpsGameScreen(
     bluetoothVM: BluetoothViewModel,
     accelerometerManager: AccelerometerManager,
-    userViewModel: UserViewModel, // 👈 se añade aquí
+    userViewModel: UserViewModel,
     nickname: String,
     avatar: Int,
     opponentNickname: String,
@@ -53,7 +50,7 @@ fun RpsGameScreen(
     var opponentChoice by remember { mutableStateOf<String?>(null) }
     var resultMessage by remember { mutableStateOf("Agita para elegir") }
 
-    // --- SENSOR ---
+    // Encargada de invocar las propiedades del acelerómetro desde la clase.
     DisposableEffect(Unit) {
         accelerometerManager.start()
         onDispose { accelerometerManager.stop() }
@@ -61,7 +58,7 @@ fun RpsGameScreen(
 
     val isFastMovement by accelerometerManager.isFastMovement.collectAsState()
 
-    // Jugada propia
+    // Se encarga de asignar una opción aleatoria.
     LaunchedEffect(isFastMovement) {
         if (isFastMovement && myChoice == null) {
             val options = listOf("Piedra", "Papel", "Tijera")
@@ -72,7 +69,7 @@ fun RpsGameScreen(
         }
     }
 
-    // Jugada rival
+    // Esta función captura la elección del rival.
     LaunchedEffect(Unit) {
         bluetoothVM.incomingRps.collect { choice ->
             opponentChoice = choice
@@ -80,7 +77,7 @@ fun RpsGameScreen(
         }
     }
 
-    // Timer y lógica de rondas
+    // Timer
     LaunchedEffect(round) {
         timer = 5
         while (timer > 0) {
@@ -88,7 +85,7 @@ fun RpsGameScreen(
             timer--
         }
 
-        // Evaluar resultado
+        // Evaluación de los resultados
         when {
             myChoice != null && opponentChoice != null -> {
                 when {
@@ -138,7 +135,7 @@ fun RpsGameScreen(
                 else -> "Empate final"
             }
 
-            // 🔹 Sumar puntos al usuario según resultado
+            // Suma puntos al usuario según resultado
             userViewModel.currentUser.value?.let { user ->
                 val pointsToAdd = when {
                     myScore > opponentScore -> 3
@@ -156,7 +153,7 @@ fun RpsGameScreen(
         }
     }
 
-    // --- UI ---
+    // Sección de diseño de la pantalla:
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -238,6 +235,7 @@ fun RpsGameScreen(
     }
 }
 
+// Composable individual para recolectar los datos de los usuarios.
 @Composable
 private fun ScoreBoardModern(name: String, avatarRes: Int, score: Int, isOpponent: Boolean = false) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {

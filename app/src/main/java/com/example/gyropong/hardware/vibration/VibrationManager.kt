@@ -1,3 +1,4 @@
+// Este archivo continene la clase que se encarga de manejar la bibración.
 package com.example.gyropong.hardware.vibration
 
 import android.content.Context

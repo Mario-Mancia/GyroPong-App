@@ -1,3 +1,6 @@
+/* Este archivo contiene la estructura y funcionalidad de la pantalla para configurar un usuario
+    sin sesión activa.
+*/
 package com.example.gyropong.ui.screens
 
 import androidx.compose.foundation.background
@@ -15,7 +18,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.example.gyropong.ui.components.AvatarSelector
 import com.example.gyropong.ui.components.GameButton
-import com.example.gyropong.hardware.vibration.VibrationManager
 
 @Composable
 fun QuickMatchSetupScreen(

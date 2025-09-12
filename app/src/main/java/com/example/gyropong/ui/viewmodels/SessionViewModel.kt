@@ -1,3 +1,4 @@
+// Este archivo contiene la clase de los viewmodels de sesión para usarlos en las screens.
 package com.example.gyropong.ui.viewmodels
 
 import android.util.Log

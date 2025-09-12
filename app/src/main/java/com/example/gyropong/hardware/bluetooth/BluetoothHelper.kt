@@ -1,3 +1,4 @@
+// Este archivo contiene los helpers para asegurarse que se puede establecer la conexión.
 package com.example.gyropong.hardware.bluetooth
 
 import android.bluetooth.BluetoothAdapter

@@ -1,5 +1,5 @@
+// Este archivo continene el manejo de conexión de cliente y host.
 package com.example.gyropong.hardware.bluetooth
-
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -42,7 +42,7 @@ class BluetoothConnection(
     @Volatile private var disconnectedNotified = false
     private var readJob: Job? = null
 
-    // ---------------- CLIENTE ----------------
+    // Manejo de conexión del cliente.
     fun connectToDevice(device: BluetoothDevice) {
         manualDisconnect = false
         disconnectedNotified = false
@@ -64,32 +64,7 @@ class BluetoothConnection(
         }
     }
 
-    /*
-    fun connectToDevice(device: BluetoothDevice) {
-        manualDisconnect = false
-        disconnectedNotified = false
-        readJob?.cancel()
-
-        ioScope.launch {
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                    ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
-                ) return@launch
-
-                clientSocket = device.createRfcommSocketToServiceRecord(uuid)
-                adapter?.cancelDiscovery()
-                clientSocket?.connect()
-                Log.d(TAG, "Conexión exitosa con: ${device.name ?: "Sin nombre"} / ${device.address}")
-                onConnected?.invoke()
-                startReading(clientSocket)
-            } catch (e: IOException) {
-                Log.e(TAG, "Error conectando al dispositivo: ${e.message}", e)
-                if (!manualDisconnect) notifyDisconnected()
-            }
-        }
-    }*/
-
-    // ---------------- SERVIDOR ----------------
+    // Manejo de BT del host.
     fun startServer() {
         manualDisconnect = false
         disconnectedNotified = false
@@ -114,7 +89,7 @@ class BluetoothConnection(
         }
     }
 
-    // ---------------- LECTURA ----------------
+    // Manejo de lecturas.
     private fun startReading(socket: BluetoothSocket?) {
         socket ?: return
         isReading = true
@@ -148,7 +123,7 @@ class BluetoothConnection(
         }
     }
 
-    // ---------------- ENVÍO ----------------
+    // Envío de paquetes.
     fun sendBytes(data: ByteArray) {
         ioScope.launch {
             try {
@@ -161,7 +136,7 @@ class BluetoothConnection(
         }
     }
 
-    // ---------------- DESCONECTAR ----------------
+    // Manejo de Desconexión.
     fun disconnect() {
         manualDisconnect = true
         isReading = false
@@ -177,6 +152,7 @@ class BluetoothConnection(
         notifyDisconnected()
     }
 
+    // Hacer descubrible el dispositivo.
     fun makeDiscoverable(duration: Int = 300) {
         val adapter = adapter ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&

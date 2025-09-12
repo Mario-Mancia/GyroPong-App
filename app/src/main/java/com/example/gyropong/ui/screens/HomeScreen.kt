@@ -1,3 +1,4 @@
+// Este archivo contiene la estructura y funcionalidad de la pantalla de inicio o 'Home'
 package com.example.gyropong.ui.screens
 
 import android.graphics.fonts.FontFamily
@@ -55,7 +56,6 @@ import com.example.gyropong.hardware.vibration.VibrationManager
 
 
 val gameFont = androidx.compose.ui.text.font.FontFamily.Default
-//val gameFontFamily = FontFamily(Font(R.font.press_start_2p))
 
 @Composable
 fun HomeScreen(
@@ -63,7 +63,6 @@ fun HomeScreen(
     onQuickMatchClick: () -> Unit,
     onSessionClick: () -> Unit
 ) {
-    // Fondo degradado
     val gradientBackground = Brush.verticalGradient(
         colors = listOf(Color(0xFF3F51B5), Color(0xFF673AB7))
     )

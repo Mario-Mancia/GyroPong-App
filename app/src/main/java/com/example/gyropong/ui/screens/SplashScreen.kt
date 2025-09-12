@@ -1,7 +1,6 @@
+// Este archivo continene la estructura y funcionalidad de la pantalla de arranque.
 package com.example.gyropong.ui.screens
 
-import android.os.Handler
-import android.os.Looper
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,7 +21,6 @@ import com.example.gyropong.ui.navigation.Screen
 import com.example.gyropong.ui.viewmodels.SessionViewModel
 import com.example.gyropong.ui.viewmodels.UserViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun SplashScreen(
@@ -35,25 +33,23 @@ fun SplashScreen(
     val userAvatar = "🐱"
     val defaultAvatarRes = R.drawable.avatar_frog
 
-    // UI simple de splash
 
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        // Fondo con drawable
         Image(
             painter = painterResource(id = R.drawable.chatgpt_image_sep_9__2025__06_01_55_pm), // tu drawable
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop // ajusta según necesidad
+            contentScale = ContentScale.Crop
         )
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Texto grande y bold encima de la imagen
+
             Text(
                 text = "JanKenPon!",
                 fontSize = 64.sp,
@@ -66,7 +62,6 @@ fun SplashScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Animación de cargando
             CircularProgressIndicator(
                 color = Color.Yellow,
                 strokeWidth = 4.dp,
@@ -75,26 +70,24 @@ fun SplashScreen(
         }
     }
 
+    // Manejo de sesiones
     LaunchedEffect(Unit) {
-        // Cargar sesión activa
         sessionViewModel.loadActiveSession()
 
-        // Esperar un poco para el splash
         delay(splashTime)
 
-        // Revisar si hay sesión activa
         val activeSession = sessionViewModel.activeSession.value
+
+        // Carga usuario y actualiza el currentUser
         if (activeSession != null) {
-            // Cargar usuario correspondiente
             userViewModel.loadUserById(activeSession.userId)
 
-            // Esperar hasta que currentUser se actualice
             while (userViewModel.currentUser.value == null) {
                 delay(50)
             }
 
 
-            // Navegar a FindMatch
+            // Navega hacia la pantalla FindMatchScreen
             val user = userViewModel.currentUser.value!!
             navController.navigate("${Screen.FindMatch.route}/${user.username}/$defaultAvatarRes") {
                 popUpTo(0) { inclusive = true }

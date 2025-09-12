@@ -1,3 +1,4 @@
+// El main activity de la aplicación, encargada del arranque general.
 package com.example.gyropong
 
 import android.Manifest
@@ -40,13 +41,14 @@ import com.example.gyropong.hardware.vibration.VibrationManager
 
 class MainActivity : ComponentActivity() {
 
+    // Lista de permisos necesarios con validación Android 12+ o Android <= 11
     private val permissions: Array<String> by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             arrayOf(
                 Manifest.permission.BLUETOOTH_SCAN,
                 Manifest.permission.BLUETOOTH_CONNECT,
                 Manifest.permission.BLUETOOTH_ADVERTISE,
-                Manifest.permission.ACCESS_FINE_LOCATION, // opcional en 12+
+                Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.VIBRATE
             )
         } else {
@@ -60,6 +62,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    //Notifica sobre la necesidad de asignar los permisos.
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             val allGranted = permissions.entries.all { it.value }
@@ -77,12 +80,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Inicializar la base de datos y el ViewModel aquí
+        // Inicialización de la base de datos y los VM
         val db = AppDatabase.getInstance(applicationContext)
         userRepository = UserRepository(db.userDao())
         sessionRepository = SessionRepository(db.sessionDao())
 
-        // Inicializar ViewModels
+        // Inicialización de los ViewModel principales con sus repositorios.
         userViewModel = ViewModelProvider(
             this,
             UserViewModelFactory(userRepository)
@@ -116,6 +119,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Composable de manejo de navegación de la aplicación.
 @Composable
 fun GyroPongApp(
     userViewModel: UserViewModel,
@@ -125,12 +129,13 @@ fun GyroPongApp(
     val context = LocalContext.current
 
     val vibrationManager = remember { VibrationManager(context) }
-    // Control global del botón físico / gesto de back
+
+    // Handler de retroceso para evitar regresar a pantallas no permitidas.
     BackHandler(enabled = true) {
         val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
         val currentTime = System.currentTimeMillis()
 
-        // Detectamos rutas que empiezan con find_match
+
         val isInternalScreen = currentRoute.startsWith(Screen.FindMatch.route) ||
                 currentRoute.startsWith(Screen.GyroPongGame.route) ||
                 currentRoute.startsWith(Screen.Profile.route)
@@ -147,7 +152,7 @@ fun GyroPongApp(
             }
 
             currentRoute == Screen.Session.route || currentRoute == Screen.QuickMatchSetup.route -> {
-                navController.popBackStack() // Regresa al Home
+                navController.popBackStack()
             }
 
             isInternalScreen -> {
@@ -167,5 +172,6 @@ fun GyroPongApp(
         }
     }
 
+    // Inicialización del AppNavHost para evitar hacerlo en SetContent
     AppNavHost(navController = navController, userViewModel = userViewModel, sessionViewModel = sessionViewModel)
 }

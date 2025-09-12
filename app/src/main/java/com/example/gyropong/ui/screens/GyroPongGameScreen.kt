@@ -1,3 +1,7 @@
+/* Este archivo contiene la pantalla del juego de pingpong.
+* -- Sin uso dentro de la ejecución.
+* -- Aplicable y funcional (aunque con problemas de desface) si se quiere implementar
+* */
 package com.example.gyropong.ui.screens
 
 import android.content.ContentValues.TAG
@@ -52,12 +56,12 @@ fun GyroPongGameScreen(
     val scope = rememberCoroutineScope()
     val TAG = "GyroPong"
 
-    // --- Dimensiones relativas ---
+    // Dimensiones relativas
     val paddleWidthFactor = 0.25f
     val paddleHeight = 30f
     val ballRadius = 15f
 
-    // --- Estado ---
+    // Estado
     var paddleX by remember { mutableStateOf(0f) }
     var ball by remember { mutableStateOf<Ball?>(null) }
     var hasBall by remember { mutableStateOf(false) }
@@ -65,7 +69,7 @@ fun GyroPongGameScreen(
     val screenWidth = remember { mutableStateOf(0f) }
     val screenHeight = remember { mutableStateOf(0f) }
 
-    // --- Giroscopio ---
+    // Giroscopio
     var rotationY by remember { mutableStateOf(0f) }
     DisposableEffect(Unit) {
         gyroscopeManager.start()
@@ -83,7 +87,7 @@ fun GyroPongGameScreen(
         paddleX = (paddleX + speed).coerceIn(0f, screenWidth.value - paddleWidth)
     }
 
-    // --- Host inicializa la bola ---
+    // Host inicializa la bola
     if (bluetoothVM.isHost && ball == null && screenWidth.value > 0f) {
         ball = Ball(
             x = screenWidth.value / 2f,
@@ -95,7 +99,7 @@ fun GyroPongGameScreen(
         Log.d(TAG, "[INIT] Host creó la bola en (${ball!!.x}, ${ball!!.y})")
     }
 
-    // --- Actualización local ---
+    // Actualización local
     LaunchedEffect(ball, hasBall) {
         while (true) {
             if (hasBall && ball != null) {
@@ -108,7 +112,6 @@ fun GyroPongGameScreen(
                 // Rebote lateral
                 if (newX <= 0f || newX >= screenWidth.value - ballRadius * 2) {
                     vx = -vx
-                    Log.d(TAG, "[BOUNCE] Rebote lateral")
                 }
 
                 // Rebote paddle
@@ -116,7 +119,6 @@ fun GyroPongGameScreen(
                     newX in paddleX..(paddleX + paddleWidth)
                 ) {
                     vy = -abs(vy)
-                    Log.d(TAG, "[BOUNCE] Rebote en paddle en X=$newX")
                 }
 
                 // Transferencia al rival
@@ -128,12 +130,10 @@ fun GyroPongGameScreen(
                         vy = abs(vy) / screenHeight.value
                     )
                     bluetoothVM.sendBall(normalizedBall)
-                    Log.d(TAG, "[SEND] Bola enviada al rival: $normalizedBall")
 
-                    // 👇 cortar de inmediato
+                    // Cortar de inmediato
                     ball = null
                     hasBall = false
-                    Log.d(TAG, "[STATE] Host suelta la bola")
                 } else {
                     ball = Ball(newX, newY, vx, vy)
                 }
@@ -142,7 +142,7 @@ fun GyroPongGameScreen(
         }
     }
 
-    // --- Cliente recibe bola ---
+    // Cliente recibe bola
     LaunchedEffect(Unit) {
         bluetoothVM.incomingBall.collect { incoming ->
             Log.d(TAG, "[RECV] Cliente recibió bola normalizada: $incoming")
@@ -158,7 +158,7 @@ fun GyroPongGameScreen(
         }
     }
 
-    // --- Desconexión automática ---
+    // Desconexión automática
     val isConnected by bluetoothVM.isConnected.collectAsState()
     LaunchedEffect(isConnected) {
         if (!isConnected) {
@@ -167,7 +167,7 @@ fun GyroPongGameScreen(
         }
     }
 
-    // --- UI ---
+    // Diseño de la pantalla:
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -208,73 +208,3 @@ fun GyroPongGameScreen(
         }
     }
 }
-
-
-
-/*
-@Composable
-fun GyroPongGameScreen(
-    bluetoothVM: BluetoothViewModel,
-    nickname: String,
-    initialOpponentNickname: String,
-    initialIsConnected: Boolean,
-    onExit: () -> Unit
-) {
-    val isConnected by bluetoothVM.isConnected.collectAsState()
-    val opponentNickname by bluetoothVM.opponentNickname.collectAsState()
-    val startSignalReceived by bluetoothVM.startSignalReceived.collectAsState()
-
-    // Log inmediato cada vez que cambie el estado
-    LaunchedEffect(isConnected, opponentNickname, startSignalReceived) {
-        Log.d(
-            "GyroPongGameScreen",
-            "Estado actualizado -> isConnected: $isConnected | " +
-                    "Oponente: ${opponentNickname ?: initialOpponentNickname} | " +
-                    "startSignalReceived: $startSignalReceived"
-        )
-    }
-
-    // 👇 Log periódico cada 5 segundos
-    LaunchedEffect(Unit) {
-        while (true) {
-            Log.d(
-                "GyroPongGameScreen",
-                "[Heartbeat] Estado actual -> isConnected: $isConnected | " +
-                        "Oponente: ${opponentNickname ?: initialOpponentNickname} | " +
-                        "startSignalReceived: $startSignalReceived"
-            )
-            delay(5000) // 5 segundos
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Tu nickname: $nickname",
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = "Oponente: ${opponentNickname ?: initialOpponentNickname}",
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = if (isConnected) "Conexión establecida ✅" else "Conexión no establecida ❌",
-            style = MaterialTheme.typography.bodyLarge,
-            color = if (isConnected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.error
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(onClick = onExit) { Text("Salir") }
-    }
-}
-*/

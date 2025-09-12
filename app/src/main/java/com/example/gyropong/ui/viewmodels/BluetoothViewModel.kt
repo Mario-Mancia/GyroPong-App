@@ -1,33 +1,25 @@
+/* Este archivo contiene la clase para manejar el intercambio de información entre ambos
+* usuarios bluetooth, compatible con el juego de pingpong no utilizado y con el de piedra, papel
+* o tijeras */
+
 package com.example.gyropong.ui.viewmodels
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
-import com.example.gyropong.hardware.bluetooth.BluetoothHelper
 import com.example.gyropong.hardware.bluetooth.BluetoothDiscovery
 import com.example.gyropong.hardware.bluetooth.BluetoothConnection
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.update
@@ -43,7 +35,7 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
         private const val NICK_HEADER = "[NICKNAME]"
         private const val START_HEADER = "[START_GAME]"
         private const val BALL_HEADER = "[BALL]"
-        private const val RPS_HEADER = "[RPS]" // 👈 NUEVO
+        private const val RPS_HEADER = "[RPS]"
     }
 
     private val context = application.applicationContext
@@ -66,11 +58,11 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
     private val _startSignalReceived = MutableStateFlow(false)
     val startSignalReceived: StateFlow<Boolean> = _startSignalReceived
 
-    // --- Bola (antiguo Pong)
+    // Bola (Pantalla de juego sin utilizar)
     private val _incomingBall = MutableSharedFlow<Ball>(replay = 1)
     val incomingBall: SharedFlow<Ball> = _incomingBall
 
-    // --- NUEVO: jugada de RPS
+    // Archivos para el juego de Piedra papel o tijera.
     private val _incomingRps = MutableSharedFlow<String>(replay = 1)
     val incomingRps: SharedFlow<String> = _incomingRps
 
@@ -142,7 +134,7 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    // --- Funciones ---
+    // Funciones
     fun startServer(nickname: String) {
         myNickname = nickname; isHost = true; connection?.startServer()
     }
@@ -200,7 +192,7 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
         sendData(message.toByteArray(Charsets.UTF_8))
     }
 
-    // --- NUEVO: enviar jugada de RPS
+    // Manejos para el nuevo juego de Piedra Papel o Tijera.
     fun sendRpsChoice(choice: String) {
         val message = "$RPS_HEADER$choice"
         sendData(message.toByteArray(Charsets.UTF_8))

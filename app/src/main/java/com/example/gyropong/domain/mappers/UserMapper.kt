@@ -22,7 +22,7 @@ fun User.toEntity(password: String): UserEntity {
         id = id,
         username = username,
         email = email,
-        password = password, // Solo aquí lo pedimos explícitamente
+        password = password,
         birthdate = birthdate,
         createdAt = createdAt,
         userPoints = userPoints

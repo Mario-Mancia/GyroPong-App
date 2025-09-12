@@ -1,3 +1,4 @@
+// Este archivo contiene la estructura y funcionalidad de la pantalla de Sesión/Registro
 package com.example.gyropong.ui.screens
 
 import android.app.DatePickerDialog
@@ -51,12 +52,12 @@ fun SessionScreen(
 ) {
     var isLogin by remember { mutableStateOf(true) }
 
-    // --- Login fields ---
+    // Campos de inicio de sesión:
     var loginEmail by remember { mutableStateOf(TextFieldValue("")) }
     var loginPassword by remember { mutableStateOf(TextFieldValue("")) }
     var loginError by remember { mutableStateOf("") }
 
-    // --- Register fields ---
+    // Campos de registro:
     var regEmail by remember { mutableStateOf(TextFieldValue("")) }
     var regUsername by remember { mutableStateOf(TextFieldValue("")) }
     var regPassword by remember { mutableStateOf(TextFieldValue("")) }
@@ -71,7 +72,7 @@ fun SessionScreen(
     val calendar = Calendar.getInstance()
     val birthdateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
-    // --- Detectar login exitoso ---
+    // Detecta un inicio de sesión exitoso.
     LaunchedEffect(currentUser) {
         currentUser?.let { user ->
             sessionViewModel.startSession(user.id)
@@ -79,7 +80,6 @@ fun SessionScreen(
         }
     }
 
-    // Fondo con degradado
     val gradientBackground = Brush.verticalGradient(
         colors = listOf(Color(0xFF3F51B5), Color(0xFF673AB7))
     )
@@ -90,7 +90,6 @@ fun SessionScreen(
             .background(gradientBackground)
             .padding(16.dp)
     ) {
-        // Botón de retroceder
         IconButton(
             onClick = { onBack() }
         ) {
@@ -103,17 +102,15 @@ fun SessionScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Switch Login / Registro
-
         Box(
             modifier = Modifier
-                .fillMaxWidth()           // Ocupa todo el ancho del screen
+                .fillMaxWidth()
                 .height(50.dp),
-            contentAlignment = Alignment.Center // Centrar el switch
+            contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
-                    .width(320.dp)         // Ancho fijo para el switch
+                    .width(320.dp)
                     .height(50.dp)
                     .background(Color(0xFF2C0B5B), RoundedCornerShape(25.dp))
             ) {
@@ -142,7 +139,7 @@ fun SessionScreen(
                         modifier = Modifier
                             .width(160.dp)
                             .clickable { isLogin = true },
-                        color = if (isLogin) Color.Black else Color.White, // negro sobre amarillo
+                        color = if (isLogin) Color.Black else Color.White,
                         textAlign = TextAlign.Center
                     )
                     Text(
@@ -150,7 +147,7 @@ fun SessionScreen(
                         modifier = Modifier
                             .width(160.dp)
                             .clickable { isLogin = false },
-                        color = if (!isLogin) Color.Black else Color.White, // negro sobre amarillo
+                        color = if (!isLogin) Color.Black else Color.White,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -164,7 +161,6 @@ fun SessionScreen(
             targetState = isLogin,
             transitionSpec = {
                 if (targetState) {
-                    // Login entra, Registro sale
                     slideInHorizontally(
                         initialOffsetX = { -it },
                         animationSpec = tween(400)
@@ -173,7 +169,6 @@ fun SessionScreen(
                         animationSpec = tween(400)
                     )
                 } else {
-                    // Registro entra, Login sale
                     slideInHorizontally(
                         initialOffsetX = { it },
                         animationSpec = tween(400)
@@ -312,6 +307,7 @@ fun SessionScreen(
     }
 }
 
+// Función composable para hacer diseños de inputs consistentes.
 @Composable
 fun SessionTextField(
     label: String,

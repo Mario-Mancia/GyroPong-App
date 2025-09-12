@@ -1,3 +1,4 @@
+// Modelos de tablas de DB en Kotlin puro.
 package com.example.gyropong.domain.models
 
 data class User(

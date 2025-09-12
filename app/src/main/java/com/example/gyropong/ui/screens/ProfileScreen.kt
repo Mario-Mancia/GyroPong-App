@@ -1,3 +1,5 @@
+// Pequeño composable para una pantalla de perfil (muy básica)
+
 package com.example.gyropong.ui.screens
 
 import androidx.compose.foundation.background
@@ -52,7 +54,6 @@ fun ProfileScreen(
             .background(Color(0xFF6843A8))
             .padding(16.dp)
     ) {
-        // IconButton de retroceso
         IconButton(
             onClick = { navController.popBackStack() },
             modifier = Modifier.align(Alignment.TopStart)

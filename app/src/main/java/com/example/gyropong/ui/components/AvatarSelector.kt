@@ -1,3 +1,4 @@
+// Un pequeño componente reutilizable para seleccionar un avatar.
 package com.example.gyropong.ui.components
 
 import androidx.compose.foundation.BorderStroke
@@ -26,7 +27,7 @@ fun AvatarSelector(
         items(avatars) { avatar ->
             Card(
                 modifier = Modifier
-                    .size(72.dp) // tamaño consistente para los avatares
+                    .size(72.dp)
                     .padding(8.dp)
                     .clickable { onAvatarSelected(avatar) },
                 shape = RoundedCornerShape(16.dp),

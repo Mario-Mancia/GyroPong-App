@@ -1,3 +1,4 @@
+// Definición de la base de datos.
 package com.example.gyropong.data.database
 
 import android.content.Context

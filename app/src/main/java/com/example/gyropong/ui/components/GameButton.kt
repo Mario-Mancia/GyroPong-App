@@ -1,3 +1,4 @@
+// Pequeño componente reutilizable para hacer botones consistentes en toda la app.
 package com.example.gyropong.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -84,57 +85,3 @@ fun GameButton(
         )
     }
 }
-
-
-/*
-@Composable
-fun GameButton(
-    text: String,
-    onClick: () -> Unit
-) {
-    var pressed by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope() // <-- CoroutineScope para eventos
-
-    val scale by animateFloatAsState(if (pressed) 0.95f else 1f)
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(70.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .shadow(8.dp, RoundedCornerShape(24.dp))
-            .background(
-                color = Color(0xFFFFD700),
-                shape = RoundedCornerShape(24.dp)
-            )
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                // Animación de pulsado con coroutine
-                pressed = true
-                scope.launch {
-                    onClick()
-                    delay(100) // breve retraso para efecto de pulsado
-                    pressed = false
-                }
-            }
-            .border(BorderStroke(3.dp, Color.Black), RoundedCornerShape(24.dp)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text.uppercase(),
-            style = TextStyle(
-                fontSize = 20.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.Black,
-                fontFamily = gameFont,
-                letterSpacing = 1.sp
-            )
-        )
-    }
-}
-*/

@@ -1,3 +1,4 @@
+// Este archivo continene la clase para el manejo del giroscopio.
 package com.example.gyropong.hardware.sensors.gyroscope
 
 import android.content.Context

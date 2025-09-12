@@ -1,3 +1,4 @@
+// Componente reutilizable para implementar la topbar del usuario con sesión activa.
 package com.example.gyropong.ui.components
 
 import androidx.compose.foundation.Image
@@ -47,7 +48,7 @@ fun SessionTopBar(
     username: String,
     avatar: Int,
     points: Int,
-    avatars: List<Int>, // lista de drawables para selección
+    avatars: List<Int>,
     onAvatarSelected: (Int) -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -57,7 +58,7 @@ fun SessionTopBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(100.dp) // altura consistente con GuestTopBar
+            .height(100.dp)
             .background(Color(0xFF621BC7), RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
             .shadow(4.dp, RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
             .padding(horizontal = 16.dp),
@@ -68,13 +69,12 @@ fun SessionTopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Avatar con clic para desplegar menú
             Box {
                 Image(
                     painter = painterResource(id = avatar),
                     contentDescription = "Avatar",
                     modifier = Modifier
-                        .size(56.dp) // tamaño consistente con GuestTopBar
+                        .size(56.dp)
                         .clip(CircleShape)
                         .clickable { expanded = true }
                 )
@@ -113,16 +113,15 @@ fun SessionTopBar(
                     username,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 26.sp // tamaño consistente con GuestTopBar
+                    fontSize = 26.sp
                 )
                 Text(
                     "Puntos: $points",
                     color = Color.Yellow,
-                    fontSize = 14.sp // un poco más grande para equilibrar
+                    fontSize = 14.sp
                 )
             }
 
-            // Botón perfil, ahora estilo “botón” como en GuestTopBar
             Button(
                 onClick = onProfileClick,
                 colors = ButtonDefaults.buttonColors(
